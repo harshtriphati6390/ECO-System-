@@ -1,0 +1,74 @@
+import sqlite3
+import pandas as pd
+import streamlit as st
+import matplotlib.pyplot as plt
+
+st.set_page_config(page_title="🌎 EcoData Analytics Dashboard", layout="wide")
+
+# Connect to database
+conn = sqlite3.connect('eco_data.db')
+
+# Query data
+df = pd.read_sql_query("SELECT * FROM environment_data", conn)
+
+st.title("🌎 EcoData — Environmental Analytics System")
+st.write("Analyze air quality, temperature, and emissions across cities.")
+
+# Select city
+cities = df['city'].unique()
+selected_city = st.selectbox("Select City", cities)
+
+# Filter data
+city_df = df[df['city'] == selected_city]
+
+# KPIs
+avg_temp = city_df['temperature'].mean()
+avg_aqi = city_df['air_quality_index'].mean()
+avg_emission = city_df['carbon_emission'].mean()
+
+st.subheader(f"📊 Key Insights for {selected_city}")
+col1, col2, col3 = st.columns(3)
+col1.metric("🌡️ Avg Temperature", f"{avg_temp:.1f} °C")
+col2.metric("💨 Avg AQI", f"{avg_aqi:.0f}")
+col3.metric("♻️ Avg Carbon Emission", f"{avg_emission:.1f} ppm")
+
+# Charts
+st.subheader("📈 Daily Environmental Trends")
+
+fig, ax = plt.subplots(3, 1, figsize=(8, 8))
+
+ax[0].plot(city_df['date'], city_df['temperature'], marker='o', color='orange')
+ax[0].set_title('Temperature Trend')
+ax[0].set_ylabel('°C')
+
+ax[1].plot(city_df['date'], city_df['air_quality_index'], marker='o', color='red')
+ax[1].set_title('Air Quality Index (AQI)')
+ax[1].set_ylabel('AQI')
+
+ax[2].plot(city_df['date'], city_df['carbon_emission'], marker='o', color='green')
+ax[2].set_title('Carbon Emission Trend')
+ax[2].set_ylabel('ppm')
+
+plt.tight_layout()
+st.pyplot(fig)
+
+# Overall comparison
+st.subheader("🌍 City-Wise AQI Comparison")
+comparison = df.groupby('city')['air_quality_index'].mean().reset_index()
+
+fig2, ax2 = plt.subplots()
+ax2.bar(comparison['city'], comparison['air_quality_index'], color=['red', 'blue', 'green'])
+ax2.set_ylabel('Average AQI')
+ax2.set_title('Average AQI by City')
+st.pyplot(fig2)
+
+# Insights
+st.subheader("💡 Insights")
+if avg_aqi > 150:
+    st.warning("⚠️ Air quality is poor! Recommend reducing emissions and planting trees.")
+else:
+    st.success("✅ Air quality is healthy. Keep monitoring for seasonal changes.")
+
+st.info("EcoData uses real-time environmental metrics to support sustainable city planning.")
+
+conn.close()
