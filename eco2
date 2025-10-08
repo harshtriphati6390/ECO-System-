@@ -1,0 +1,37 @@
+import sqlite3
+
+# Connect to database
+conn = sqlite3.connect('eco_data.db')
+cursor = conn.cursor()
+
+# Create table
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS environment_data (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    city TEXT,
+    date TEXT,
+    temperature REAL,
+    humidity REAL,
+    air_quality_index INTEGER,
+    carbon_emission REAL
+)
+''')
+
+# Insert sample data
+data = [
+    ('Delhi', '2025-10-01', 32.5, 55, 180, 45.2),
+    ('Delhi', '2025-10-02', 33.0, 60, 200, 47.5),
+    ('Mumbai', '2025-10-01', 30.2, 75, 90, 30.4),
+    ('Mumbai', '2025-10-02', 31.1, 70, 110, 32.0),
+    ('Chennai', '2025-10-01', 34.0, 65, 120, 38.1),
+    ('Chennai', '2025-10-02', 35.2, 67, 125, 40.0)
+]
+
+cursor.executemany('''
+INSERT INTO environment_data (city, date, temperature, humidity, air_quality_index, carbon_emission)
+VALUES (?, ?, ?, ?, ?, ?)
+''', data)
+
+conn.commit()
+conn.close()
+print("✅ Database and sample data created successfully!")
